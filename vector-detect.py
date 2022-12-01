@@ -123,8 +123,20 @@ for path, im, im0s, vid_cap, s in dataset:
                                 #corners = findcorners(msg_img)
                                 #msg_img = homography(msg_img)
                                 code, check, message = bit_detection(msg_img)
-        
-               
+        #code = [1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1]
+        #check = [1, 1, 0, 0, 0, 1, 0, 1]
+        str_code = [str(x) for x in code]
+        str_check = [str(x) for x in check]
+        str1 = ''.join(str_code)
+        str2 = ''.join(str_check)
+        int_str1 = int(str1,2);
+        int_str2 = int(str2,2);
+        int(str1,2)
+        int(str(code),2)
+        I = mpimg.imread('D:/Project/DOE/ped.png')
+        if int_str1 == 1733 & int_str2==197:
+            plt.imshow(I)
+            plt.axis('off')
         im_result = annotator.result()
         im_result = cv2.resize(im_result, (1920, 1080))
         im_result[760:1080,:,:]=message
