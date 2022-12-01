@@ -3,6 +3,8 @@ import os
 import platform
 import sys
 from pathlib import Path
+import matplotlib.image as mpimg
+import math
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -133,7 +135,7 @@ for path, im, im0s, vid_cap, s in dataset:
         int_str2 = int(str2,2);
         int(str1,2)
         int(str(code),2)
-        I = mpimg.imread('D:/Project/DOE/ped.png')
+        I = mpimg.imread('vector/ped.png')
         if int_str1 == 1733 & int_str2==197:
             plt.imshow(I)
             plt.axis('off')
