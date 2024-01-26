@@ -1,9 +1,3 @@
-import matplotlib
-# from matplotlib import pyplot as plt
-
-# print(plt.get_backend())
-
-# matplotlib.use('GTK3Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 from ultralytics import YOLO
