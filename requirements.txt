@@ -4,3 +4,4 @@ ultralytics
 matplotlib
 numpy
 opencv-python
+# PyGObject

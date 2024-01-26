@@ -1,11 +1,19 @@
+import matplotlib
+# from matplotlib import pyplot as plt
+
+# print(plt.get_backend())
+
+# matplotlib.use('GTK3Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 from ultralytics import YOLO
 import cv2
 import matplotlib.gridspec as gridspec
 
+
 # keeping the frame + sign box tos how at the result
 det = None
+frame_count = 0
 # Function to order points for perspective transformation
 
 
@@ -92,7 +100,23 @@ def panel_enhancer(image_to_enhance):
         # Get the box points and draw them
         box = cv2.boxPoints(min_area_rect)
         box = np.int0(box)
-        cv2.drawContours(res, [box], 0, (0, 255, 0), 2)
+
+        # be sure if the box is colse to the aspect ratio of the panel
+
+        dist_1 = np.linalg.norm(box[0] - box[1])
+        dist_2 = np.linalg.norm(box[1] - box[2])
+
+        # Width and height of the rectangle
+        width = max(dist_1, dist_2)
+        height = min(dist_1, dist_2)
+
+        # Calculate aspect ratio (width / height)
+        aspect_ratio = width / height if height > 0 else 0
+
+        if aspect_ratio > 5 and aspect_ratio < 6.5:
+            cv2.drawContours(res, [box], 0, (0, 255, 0), 2)
+        else: 
+            return
     else:
         return
 
@@ -125,7 +149,8 @@ def panel_enhancer(image_to_enhance):
     processed_imgs = [image_to_enhance, res, grid_image]
     processed_img_titles = ['Cropped panel image',
                             'Enhanced panel with rotated bounding box', 'Aligned panel with grid']
-    plt.figure(figsize=(16, 8))
+
+    # plt.figure(figsize=(16, 8))
 
     # Making a grid to fill for the plot
     gs = gridspec.GridSpec(3, 2)
@@ -133,7 +158,7 @@ def panel_enhancer(image_to_enhance):
     # Left side: frmae + box
     ax1 = plt.subplot(gs[0:3, 0])
     ax1.imshow(cv2.cvtColor(det, cv2.COLOR_BGR2RGB)) 
-    ax1.set_title('Camera Object Detection')
+    ax1.set_title(f'Camera Object Detection frame {frame_count}')
     ax1.axis('off')
 
     # Right side: 3 vertically stacked images
@@ -145,16 +170,56 @@ def panel_enhancer(image_to_enhance):
         ax.axis('off')
 
     plt.show()
+    plt.draw()
+    plt.pause(0.1)  # Small delay
+
+    # # Optional: Clear the plot
+    plt.clf()
+
+    # hori = np.concatenate((res, grid_image), axis=1) 
+    
+    # # concatenate image Vertically 
+    # verti = np.concatenate((image_to_enhance, res, grid_image), axis=0) 
 
 
+    # Canvas size
+    # canvas_height = 800
+    # canvas_width = 1600
 
+    # # Create a blank canvas (white background)
+    # canvas = np.ones((canvas_height, canvas_width, 3), dtype=np.uint8) * 255
+
+    # # Assuming 'det' and 'processed_imgs' are your images, and 'processed_img_titles' are the titles
+    # # Resize and place the large image on the left
+    # left_image = resize_image(det, canvas_width // 2, canvas_height)
+    # canvas[0:canvas_height, 0:canvas_width // 2] = left_image
+
+    # # Resize and place the smaller images on the right
+    # small_img_height = canvas_height // 3
+    # for i in range(3):
+    #     small_image = resize_image(processed_imgs[i], canvas_width // 2, small_img_height)
+    #     canvas[i * small_img_height: (i + 1) * small_img_height, canvas_width // 2: canvas_width] = small_image
+
+    # # Display the canvas
+#     cv2.imshow('Combined Images', hori)
+#     cv2.waitKey(0)
+
+#     cv2.imshow('Combined Images', verti)
+    
+#     cv2.waitKey(0)
+#     cv2.destroyAllWindows()
+
+# def resize_image(image, width, height):
+#     return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 #Main Function:
 model_path = 'VECTOR-detect.pt'
 video_path = 0  # for webcam
+video_path = '/home/cw/Downloads/panel-test.mp4'  # for video file
 # detecting class 7 with > 0.6 confidence
 sign_det_conf = 0.6
 det_cls = [7]
-
+plt.ion()
+plt.figure(figsize=(16, 8))
 
 model = YOLO(model_path)
 cap = cv2.VideoCapture(video_path)
@@ -165,6 +230,7 @@ while cap.isOpened():
     success, frame = cap.read()
 
     if success:
+        frame_count+=1
         # Run YOLOv8 inference on the frame
         results = model(frame, conf=sign_det_conf, classes=det_cls)
 
