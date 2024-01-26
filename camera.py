@@ -106,8 +106,8 @@ def panel_enhancer(image_to_enhance):
 
         # Calculate aspect ratio (width / height)
         aspect_ratio = width / height if height > 0 else 0
-
-        if aspect_ratio > 5 and aspect_ratio < 6.5:
+        # print(aspect_ratio)
+        if aspect_ratio > target_ratio[0] and aspect_ratio < target_ratio[1]:
             cv2.drawContours(res, [box], 0, (0, 255, 0), 2)
         else: 
             return
@@ -151,7 +151,8 @@ def panel_enhancer(image_to_enhance):
 
     # Left side: frmae + box
     ax1 = plt.subplot(gs[0:3, 0])
-    ax1.imshow(cv2.cvtColor(det, cv2.COLOR_BGR2RGB)) 
+    # ax1.imshow(cv2.cvtColor(det, cv2.COLOR_BGR2RGB)) 
+    ax1.imshow(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)) 
     ax1.set_title(f'Camera Object Detection frame {frame_count}')
     ax1.axis('off')
 
@@ -170,48 +171,15 @@ def panel_enhancer(image_to_enhance):
     # # Optional: Clear the plot
     plt.clf()
 
-    # hori = np.concatenate((res, grid_image), axis=1) 
-    
-    # # concatenate image Vertically 
-    # verti = np.concatenate((image_to_enhance, res, grid_image), axis=0) 
-
-
-    # Canvas size
-    # canvas_height = 800
-    # canvas_width = 1600
-
-    # # Create a blank canvas (white background)
-    # canvas = np.ones((canvas_height, canvas_width, 3), dtype=np.uint8) * 255
-
-    # # Assuming 'det' and 'processed_imgs' are your images, and 'processed_img_titles' are the titles
-    # # Resize and place the large image on the left
-    # left_image = resize_image(det, canvas_width // 2, canvas_height)
-    # canvas[0:canvas_height, 0:canvas_width // 2] = left_image
-
-    # # Resize and place the smaller images on the right
-    # small_img_height = canvas_height // 3
-    # for i in range(3):
-    #     small_image = resize_image(processed_imgs[i], canvas_width // 2, small_img_height)
-    #     canvas[i * small_img_height: (i + 1) * small_img_height, canvas_width // 2: canvas_width] = small_image
-
-    # # Display the canvas
-#     cv2.imshow('Combined Images', hori)
-#     cv2.waitKey(0)
-
-#     cv2.imshow('Combined Images', verti)
-    
-#     cv2.waitKey(0)
-#     cv2.destroyAllWindows()
-
-# def resize_image(image, width, height):
-#     return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 #Main Function:
 model_path = 'VECTOR-detect.pt'
 video_path = 0  # for webcam
-video_path = '/home/cw/Downloads/panel-test.mp4'  # for video file
+video_path = '/home/cw/vec-backup/VECTOR-Demo/vector/panel-test.mp4'  # for video file
 # detecting class 7 with > 0.6 confidence
 sign_det_conf = 0.6
-det_cls = [7]
+panel_cls = 7
+target_ratio = [4,6] # target aspect ratio of the panel
+
 plt.ion()
 plt.figure(figsize=(16, 8))
 
@@ -226,18 +194,22 @@ while cap.isOpened():
     if success:
         frame_count+=1
         # Run YOLOv8 inference on the frame
-        results = model(frame, conf=sign_det_conf, classes=det_cls)
+        results = model(frame, conf=sign_det_conf)
+        annotated_frame = results[0].plot()
 
         # Iterate through detections
         for r in results:
             # Extract bounding box coordinates,
-            for box in r.boxes:
-                x1, y1, x2, y2 = map(int, box.xyxy.tolist()[0])
-                det = frame.copy()
-                cv2.rectangle(det, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            boxes = r.boxes.xyxy.tolist()
+            classes = r.boxes.cls.tolist()
+            for box, cls in zip(boxes, classes):
+                if cls == panel_cls:
+                    x1, y1, x2, y2 = map(int, box)
+                    # det = frame.copy()
+                    # cv2.rectangle(det, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-                sign = frame[y1:y2, x1:x2]
-                panel_enhancer(sign)
+                    sign = frame[y1:y2, x1:x2]
+                    panel_enhancer(sign)
 
         # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord("q"):
