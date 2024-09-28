@@ -1,0 +1,8 @@
+# Usage: pip install -r requirements.txt
+
+ultralytics
+matplotlib
+numpy
+opencv-python
+scikit-learn
+# PyGObject
